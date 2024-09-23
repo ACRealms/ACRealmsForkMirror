@@ -1492,7 +1492,13 @@ Please report this to the ACRealms developer.");
 
         public WorldRealm WorldRealm => WorldRealmID.HasValue ? RealmManager.GetRealm(WorldRealmID, includeRulesets: true) : null;
         public bool IsPrimaryForWorldRealm => ShortInstanceID == 0;
-        public bool IsHomeInstanceForPlayer(Player player) => IsPrimaryForWorldRealm && player.HomeRealm == WorldRealmID;
+		
+        public bool IsHomeInstanceForPlayer(Player player)
+        {
+            if (RealmRuleset.GetProperty(RealmPropertyBool.IgnoreHousingPrimaryInstanceRestriction))
+                return player.HomeRealm == WorldRealmID;
+            return IsPrimaryForWorldRealm && player.HomeRealm == WorldRealmID;
+        }
 
         public class RealmShortcuts
         {
