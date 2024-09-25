@@ -83,7 +83,7 @@ will be moved to the parent realm.")]
 
         [Description("If enabled, players can purchase houses in instances other than the primary instance.")]
         [RealmPropertyBool(false)]
-        IgnoreHousingPrimaryInstanceRestriction = 14,
+        IgnoreHousingInstanceRestrictions = 14,
     }
 
     public static class RealmPropertyBoolExtensions
