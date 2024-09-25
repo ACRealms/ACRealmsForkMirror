@@ -32,11 +32,20 @@ namespace ACE.Server.WorldObjects
             //Console.WriteLine($"\n{Name}.HandleActionBuyHouse()");
             log.Info($"[HOUSE] {Name}.HandleActionBuyHouse()");
 
-            if (!CurrentLandblock.IsHomeInstanceForPlayer(this))
-            {
-                Session.Network.EnqueueSend(new GameMessageSystemChat("You may only purchase a house in your home realm.", ChatMessageType.Broadcast));
-                log.Info($"[HOUSE] {Name}.HandleActionBuyHouse(): Failed pre-purchase requirement - Not in home realm instance");
-                return;
+            if (RealmRuleset.GetProperty(RealmPropertyBool.IgnoreHousingInstanceRestrictions)){
+                if (!CurrentLandblock.IsHomeRealmForPlayer(this))
+                {
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("You may only purchase a house in your home realm.", ChatMessageType.Broadcast));
+                    log.Info($"[HOUSE] {Name}.HandleActionBuyHouse(): Failed pre-purchase requirement - Not in home realm");
+                    return;
+                }
+            }else{
+                if (!CurrentLandblock.IsHomeInstanceForPlayer(this))
+                {
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("You may only purchase a house in your home realm's primary instance.", ChatMessageType.Broadcast));
+                    log.Info($"[HOUSE] {Name}.HandleActionBuyHouse(): Failed pre-purchase requirement - Not in home realm instance");
+                    return;
+                }
             }
 
             // verify player doesn't already own a house

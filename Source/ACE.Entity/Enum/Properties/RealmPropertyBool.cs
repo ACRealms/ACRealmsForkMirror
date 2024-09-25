@@ -80,6 +80,10 @@ will be moved to the parent realm.")]
         [Description("If enabled, classical instances will be active regardless of the character's location. This is not recommended for realms other than true solo-self-found realms, and is considered an advanced feature.")]
         [RealmPropertyBool(false)]
         ClassicalInstances_EnableForAllLandblocks_Dangerous = 13,
+
+        [Description("If enabled, players can purchase houses in instances other than the primary instance.")]
+        [RealmPropertyBool(false)]
+        IgnoreHousingInstanceRestrictions = 14,
     }
 
     public static class RealmPropertyBoolExtensions
