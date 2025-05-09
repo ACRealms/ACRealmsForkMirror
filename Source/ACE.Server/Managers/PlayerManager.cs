@@ -253,6 +253,19 @@ namespace ACE.Server.Managers
             return allPlayers;
         }
 
+        public static List<IPlayer> GetAllPlayers(ushort realmId)
+        {
+            var offlinePlayers = GetAllOffline(realmId);
+            var onlinePlayers = GetAllOnline(realmId);
+
+            var allPlayers = new List<IPlayer>();
+
+            allPlayers.AddRange(offlinePlayers);
+            allPlayers.AddRange(onlinePlayers);
+
+            return allPlayers;
+        }
+
         public static Dictionary<ulong, IPlayer> GetAccountPlayers(uint accountId)
         {
             playersLock.EnterReadLock();
@@ -279,6 +292,18 @@ namespace ACE.Server.Managers
                 playersLock.ExitReadLock();
             }
         }
+        public static int GetOfflineCount(ushort realmId)
+        {
+            playersLock.EnterReadLock();
+            try
+            {
+                return GetAllOffline(realmId).Count;
+            }
+            finally
+            {
+                playersLock.ExitReadLock();
+            }
+        }
 
         public static List<OfflinePlayer> GetAllOffline()
         {
@@ -298,12 +323,47 @@ namespace ACE.Server.Managers
             return results;
         }
 
+        public static List<OfflinePlayer> GetAllOffline(ushort realmId)
+        {
+            var results = new List<OfflinePlayer>();
+
+            playersLock.EnterReadLock();
+            try
+            {
+                foreach (var player in offlinePlayers.Values)
+                {
+                    var homeRealm = player.GetProperty(PropertyInt.HomeRealm);
+                    if (homeRealm != null && (ushort)homeRealm == realmId)
+                        results.Add(player);
+                }
+            }
+            finally
+            {
+                playersLock.ExitReadLock();
+            }
+
+            return results;
+        }
+
         public static int GetOnlineCount()
         {
             playersLock.EnterReadLock();
             try
             {
                 return onlinePlayers.Count;
+            }
+            finally
+            {
+                playersLock.ExitReadLock();
+            }
+        }
+
+        public static int GetOnlineCount(ushort realmId)
+        {
+            playersLock.EnterReadLock();
+            try
+            {
+                return GetAllOnline(realmId).Count;
             }
             finally
             {
@@ -378,6 +438,28 @@ namespace ACE.Server.Managers
 
             return results;
         }
+        public static List<Player> GetAllOnline(ushort realmId)
+        {
+            var results = new List<Player>();
+
+            playersLock.EnterReadLock();
+            try
+            {
+                foreach (var player in onlinePlayers.Values)
+                {
+                    var homeRealm = player.GetProperty(PropertyInt.HomeRealm);
+                    if (homeRealm != null && (ushort)homeRealm == realmId)
+                        results.Add(player);
+                }
+            }
+            finally
+            {
+                playersLock.ExitReadLock();
+            }
+
+            return results;
+        }
+
 
 
         /// <summary>
