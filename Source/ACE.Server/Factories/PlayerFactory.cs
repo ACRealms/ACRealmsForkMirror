@@ -414,6 +414,9 @@ namespace ACE.Server.Factories
                             spellFreeRide.PositionAnglesX.Value, spellFreeRide.PositionAnglesY.Value, spellFreeRide.PositionAnglesZ.Value, spellFreeRide.PositionAnglesW.Value), iid);
 
                 player.Instantiation = new InstancedPosition(instantiation);
+
+                if (Props.Pvp.World.IsPkOnly(defaultRealm.StandardRules))
+                    player.SetProperty(PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.PK);
             }
             else
             {

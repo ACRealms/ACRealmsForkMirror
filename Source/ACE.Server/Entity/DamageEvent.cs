@@ -11,6 +11,7 @@ using ACE.Entity.Models;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
+using ACRealms;
 
 namespace ACE.Server.Entity
 {
@@ -230,6 +231,15 @@ namespace ACE.Server.Entity
 
             // ratings
             DamageRatingBaseMod = Creature.GetPositiveRatingMod(attacker.GetDamageRating());
+
+            //Apply custom PvP Dmg rating scaling
+            var pvpDmgRatingMod = Props.Pvp.Damage.RatingsModDmg(attacker.RealmRuleset);
+            if (pkBattle)
+            {
+                int dmgRatingBase = Creature.ModToRating(DamageRatingBaseMod);
+                DamageRatingBaseMod = Creature.GetPositiveRatingMod((int)Math.Round(dmgRatingBase * pvpDmgRatingMod));
+            }
+
             RecklessnessMod = Creature.GetRecklessnessMod(attacker, defender);
             SneakAttackMod = attacker.GetSneakAttackMod(defender);
             HeritageMod = attacker.GetHeritageBonus(Weapon) ? 1.05f : 1.0f;
@@ -276,6 +286,14 @@ namespace ACE.Server.Entity
                     CriticalDamageMod = 1.0f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender);
 
                     CriticalDamageRatingMod = Creature.GetPositiveRatingMod(attacker.GetCritDamageRating());
+
+                    //Apply custom PvP CD rating scaling
+                    var pvpCdRatingMod = Props.Pvp.Damage.RatingsModCritdmg(attacker.RealmRuleset);
+                    if (pkBattle)
+                    {
+                        int cdRatingBase = Creature.ModToRating(CriticalDamageRatingMod);
+                        CriticalDamageRatingMod = Creature.GetPositiveRatingMod((int)Math.Round(cdRatingBase * pvpCdRatingMod));
+                    }
 
                     // recklessness excluded from crits
                     RecklessnessMod = 1.0f;
@@ -344,9 +362,24 @@ namespace ACE.Server.Entity
             // damage resistance rating
             DamageResistanceRatingMod = DamageResistanceRatingBaseMod = defender.GetDamageResistRatingMod(CombatType);
 
+            //Apply custom PvP DRR rating scaling
+            if (pkBattle)
+            {
+                int drrRatingBase = Math.Abs(Creature.ModToRating(DamageResistanceRatingBaseMod));
+                DamageResistanceRatingMod = DamageResistanceRatingBaseMod = Creature.GetNegativeRatingMod((int)Math.Round(drrRatingBase * pvpDmgRatingMod));
+            }
+
             if (IsCritical)
             {
                 CriticalDamageResistanceRatingMod = Creature.GetNegativeRatingMod(defender.GetCritDamageResistRating());
+
+                //Apply custom PvP CDR rating scaling
+                var pvpCdrRatingMod = Props.Pvp.Damage.RatingsModCritdmg(attacker.RealmRuleset);
+                if (pkBattle)
+                {
+                    int cdrRatingBase = Math.Abs(Creature.ModToRating(CriticalDamageResistanceRatingMod));
+                    CriticalDamageResistanceRatingMod = Creature.GetNegativeRatingMod((int)Math.Round(cdrRatingBase * pvpCdrRatingMod));
+                }
 
                 DamageResistanceRatingMod = Creature.AdditiveCombine(DamageResistanceRatingBaseMod, CriticalDamageResistanceRatingMod);
             }
@@ -363,6 +396,282 @@ namespace ACE.Server.Entity
 
             // calculate final output damage
             Damage = DamageBeforeMitigation * ArmorMod * ShieldMod * ResistanceMod * DamageResistanceRatingMod;
+
+            if (playerAttacker != null && playerDefender != null)
+            {
+                float config_mod = 1;
+
+                if (Weapon != null)
+                {
+                    try
+                    {
+                        switch (Weapon.WeaponSkill)
+                        {
+                            case Skill.FinesseWeapons:
+                                config_mod = (float)Props.Pvp.Damage.DmgModFw(attacker.RealmRuleset);
+                                break;
+                            case Skill.LightWeapons:
+                                config_mod = (float)Props.Pvp.Damage.DmgModLw(attacker.RealmRuleset);
+                                if (Weapon.W_AttackType == AttackType.TripleStrike)
+                                {
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModLwTriplestrike(attacker.RealmRuleset);
+                                }
+                                break;
+                            case Skill.HeavyWeapons:
+                                config_mod = (float)Props.Pvp.Damage.DmgModHw(attacker.RealmRuleset);
+                                if (AttackType.MultiStrike.HasFlag(Weapon.W_AttackType))
+                                {
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModHwMultistrike(attacker.RealmRuleset);
+                                }
+                                break;
+                            case Skill.TwoHandedCombat:
+                                config_mod = (float)Props.Pvp.Damage.DmgMod2h(attacker.RealmRuleset);
+                                break;
+                            case Skill.MissileWeapons:
+                                if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                {
+                                    config_mod = (float)Props.Pvp.Damage.DmgModBow(attacker.RealmRuleset);
+                                }
+                                else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                {
+                                    config_mod = (float)Props.Pvp.Damage.DmgModXbow(attacker.RealmRuleset);
+                                }
+                                else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                {
+                                    config_mod = (float)Props.Pvp.Damage.DmgModTw(attacker.RealmRuleset);
+                                }
+
+                                break;
+
+                        }
+
+                        if (Weapon.HasImbuedEffect(ImbuedEffectType.ArmorRending))
+                        {
+                            config_mod *= (float)Props.Pvp.Damage.DmgModAr(attacker.RealmRuleset);
+                            switch (Weapon.WeaponSkill)
+                            {
+                                case Skill.FinesseWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModFwAr(attacker.RealmRuleset);
+                                    break;
+                                case Skill.LightWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModLwAr(attacker.RealmRuleset);
+                                    break;
+                                case Skill.HeavyWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModHwAr(attacker.RealmRuleset);
+                                    break;
+                                case Skill.TwoHandedCombat:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgMod2hAr(attacker.RealmRuleset);
+                                    break;
+                                case Skill.MissileWeapons:
+                                    if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModBowAr(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModXbowAr(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModTwAr(attacker.RealmRuleset);
+                                    }
+
+                                    break;
+
+                            }
+                        }
+                        else if (Weapon.HasImbuedEffect(ImbuedEffectType.CripplingBlow))
+                        {
+                            config_mod *= (float)Props.Pvp.Damage.DmgModCb(attacker.RealmRuleset);
+                            switch (Weapon.WeaponSkill)
+                            {
+                                case Skill.FinesseWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModFwCb(attacker.RealmRuleset);
+                                    break;
+                                case Skill.LightWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModLwCb(attacker.RealmRuleset);
+                                    if (Weapon.W_AttackType == AttackType.TripleStrike)
+                                    {
+                                        if (IsCritical)
+                                        {
+                                            config_mod *= (float)Props.Pvp.Damage.DmgModLwCbCritTriplestrike(attacker.RealmRuleset);
+                                        }
+                                    }
+                                    break;
+                                case Skill.HeavyWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModHwCb(attacker.RealmRuleset);
+                                    if (AttackType.MultiStrike.HasFlag(Weapon.W_AttackType))
+                                    {
+                                        if (IsCritical)
+                                        {
+                                            config_mod *= (float)Props.Pvp.Damage.DmgModHwCbCritMultistrike(attacker.RealmRuleset);
+                                        }
+                                    }
+                                    break;
+                                case Skill.TwoHandedCombat:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgMod2hCb(attacker.RealmRuleset);
+                                    break;
+                                case Skill.MissileWeapons:
+                                    if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModBowCb(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModXbowCb(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModTwCb(attacker.RealmRuleset);
+                                    }
+                                    break;
+
+                            }
+
+                            if (IsCritical)
+                            {
+                                switch (Weapon.WeaponSkill)
+                                {
+                                    case Skill.FinesseWeapons:
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModFwCbCrit(attacker.RealmRuleset);
+                                        break;
+                                    case Skill.LightWeapons:
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModLwCbCrit(attacker.RealmRuleset);
+                                        break;
+                                    case Skill.HeavyWeapons:
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModHwCbCrit(attacker.RealmRuleset);
+                                        break;
+                                    case Skill.TwoHandedCombat:
+                                        config_mod *= (float)Props.Pvp.Damage.DmgMod2hCbCrit(attacker.RealmRuleset);
+                                        break;
+                                    case Skill.MissileWeapons:
+                                        if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                        {
+                                            config_mod *= (float)Props.Pvp.Damage.DmgModBowCbCrit(attacker.RealmRuleset);
+                                        }
+                                        else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                        {
+                                            config_mod *= (float)Props.Pvp.Damage.DmgModXbowCbCrit(attacker.RealmRuleset);
+                                        }
+                                        else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                        {
+                                            config_mod *= (float)Props.Pvp.Damage.DmgModTwCbCrit(attacker.RealmRuleset);
+                                        }
+                                        break;
+
+                                }
+                            }
+                        }
+                        else if (Weapon.HasImbuedEffect(ImbuedEffectType.CriticalStrike))
+                        {
+                            config_mod *= (float)Props.Pvp.Damage.DmgModCs(attacker.RealmRuleset);
+                            switch (Weapon.WeaponSkill)
+                            {
+                                case Skill.FinesseWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModFwCs(attacker.RealmRuleset);
+                                    break;
+                                case Skill.LightWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModLwCs(attacker.RealmRuleset);
+                                    break;
+                                case Skill.HeavyWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModHwCs(attacker.RealmRuleset);
+                                    break;
+                                case Skill.TwoHandedCombat:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgMod2hCs(attacker.RealmRuleset);
+                                    break;
+                                case Skill.MissileWeapons:
+                                    if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModBowCs(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModXbowCs(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModTwCs(attacker.RealmRuleset);
+                                    }
+                                    break;
+
+                            }
+                        }
+                        else if (Weapon.IgnoreMagicArmor && Weapon.IgnoreMagicResist)
+                        {
+                            config_mod *= (float)Props.Pvp.Damage.DmgModHollow(attacker.RealmRuleset);
+                            switch (Weapon.WeaponSkill)
+                            {
+                                case Skill.FinesseWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModFwHollow(attacker.RealmRuleset);
+                                    break;
+                                case Skill.LightWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModLwHollow(attacker.RealmRuleset);
+                                    break;
+                                case Skill.HeavyWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModHwHollow(attacker.RealmRuleset);
+                                    break;
+                                case Skill.TwoHandedCombat:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgMod2hHollow(attacker.RealmRuleset);
+                                    break;
+                                case Skill.MissileWeapons:
+                                    if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModBowHollow(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModXbowHollow(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModTwHollow(attacker.RealmRuleset);
+                                    }
+                                    break;
+
+                            }
+                        }
+                        else if (Weapon.HasImbuedEffect(ImbuedEffectType.IgnoreAllArmor))
+                        {
+                            config_mod *= (float)Props.Pvp.Damage.DmgModPhantom(attacker.RealmRuleset);
+                            switch (Weapon.WeaponSkill)
+                            {
+                                case Skill.FinesseWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModFwPhantom(attacker.RealmRuleset);
+                                    break;
+                                case Skill.LightWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModLwPhantom(attacker.RealmRuleset);
+                                    break;
+                                case Skill.HeavyWeapons:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgModHwPhantom(attacker.RealmRuleset);
+                                    break;
+                                case Skill.TwoHandedCombat:
+                                    config_mod *= (float)Props.Pvp.Damage.DmgMod2hPhantom(attacker.RealmRuleset);
+                                    break;
+                                case Skill.MissileWeapons:
+                                    if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Bow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModBowPhantom(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.DefaultCombatStyle != null && Weapon.DefaultCombatStyle == CombatStyle.Crossbow)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModXbowPhantom(attacker.RealmRuleset);
+                                    }
+                                    else if (Weapon.IsThrownWeapon || Weapon.IsAtlatl)
+                                    {
+                                        config_mod *= (float)Props.Pvp.Damage.DmgModTwPhantom(attacker.RealmRuleset);
+                                    }
+                                    break;
+                            }
+                        }
+
+                        Damage = Damage * config_mod;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Failed applying server configured pvp mods. Ex: {ex}");
+                    }
+                }
+            }
 
             DamageMitigated = DamageBeforeMitigation - Damage;
 

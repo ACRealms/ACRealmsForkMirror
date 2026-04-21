@@ -14,6 +14,8 @@ using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.Structure;
 using ACE.Server.WorldObjects.Entity;
+using ACRealms;
+using log4net;
 
 namespace ACE.Server.WorldObjects.Managers
 {
@@ -28,6 +30,8 @@ namespace ACE.Server.WorldObjects.Managers
 
     public class EnchantmentManager
     {
+        private ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public WorldObject WorldObject { get; }
         public Player Player { get; }
 
@@ -273,6 +277,16 @@ namespace ACE.Server.WorldObjects.Managers
             {
                 entry.HasSpellSetId = true;
                 entry.SpellSetId = (EquipmentSet)caster.EquipmentSetId;
+            }
+
+            if (caster != null &&
+              caster.PlayerKillerStatus == PlayerKillerStatus.PK &&
+              spell.IsHarmful &&
+              !spell.IsSelfTargeted &&
+              this.Player != null &&
+              this.Player.PlayerKillerStatus == PlayerKillerStatus.PK)
+            {
+                entry.IsPvP = true;
             }
 
             return entry;
@@ -1157,7 +1171,12 @@ namespace ACE.Server.WorldObjects.Managers
                 // normally we could just use netherDot.StatModValue here,
                 // but in case WorldObject has a non-default HeartbeatInterval,
                 // we want this value to still be based on the damage per default heartbeat interval
-                totalBaseDamage += GetDamagePerTick(netherDot, 5.0);
+                var ratingDamage = GetDamagePerTick(netherDot, 5.0);
+
+                if (netherDot.IsPvP)
+                    ratingDamage *= (float)Props.Pvp.Damage.DmgModVoidDotRatingReduction((WorldObject).RealmRuleset);
+
+                totalBaseDamage += ratingDamage;
             }
             var rating = (int)Math.Round(totalBaseDamage / 8.0f);   // thanks to Xenocide for this formula!
             //Console.WriteLine($"{WorldObject.Name}.NetherDotDamageRating: {rating}");
@@ -1371,7 +1390,46 @@ namespace ACE.Server.WorldObjects.Managers
                 //Console.WriteLine("DRR: " + Creature.NegativeModToRating(damageResistRatingMod));
                 //Console.WriteLine("NRR: " + Creature.NegativeModToRating(netherResistRatingMod));
 
+                var pvpDmgMod = 1.0f;
+                if (damageType == DamageType.Nether && sourcePlayer != null && targetPlayer != null)
+                    pvpDmgMod = (float)Props.Pvp.Damage.DmgModVoidDot(damager.RealmRuleset);
+
                 tickAmount *= resistanceMod * damageResistRatingMod * dotResistRatingMod;
+
+                //Add an additional modifier for hybrid void characters in pvp
+                if (sourcePlayer != null && targetPlayer != null && damageType == DamageType.Nether)
+                {
+                    try
+                    {
+                        var isHybrid = false;
+                        foreach (var playerSkill in sourcePlayer.Skills)
+                        {
+                            if (playerSkill.Key == Skill.FinesseWeapons ||
+                                playerSkill.Key == Skill.HeavyWeapons ||
+                                playerSkill.Key == Skill.LightWeapons ||
+                                playerSkill.Key == Skill.WarMagic ||
+                                playerSkill.Key == Skill.MissileWeapons ||
+                                playerSkill.Key == Skill.TwoHandedCombat)
+                            {
+                                if (playerSkill.Value.AdvancementClass == SkillAdvancementClass.Trained || playerSkill.Value.AdvancementClass == SkillAdvancementClass.Specialized)
+                                {
+                                    isHybrid = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (isHybrid)
+                        {
+                            var hybridMod = Props.Pvp.Damage.VoidHybridMod(damager.RealmRuleset);
+                            tickAmount = tickAmount * (float)hybridMod;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Error in EnchantmentManager.ApplyDamageTick while applying pvp_void_hybrid_mod. Ex: {ex}");
+                    }
+                }
 
                 // make sure the target's current health is not exceeded
                 if (tickAmountTotal + tickAmount >= creature.Health.Current)

@@ -1,0 +1,639 @@
+{
+  "$schema_version": 1,
+  "namespace": "Pvp.Damage",
+  "description": "Properties related to player damage mods, affecting PvP only",
+  "properties": {
+    "IgnoreMagicResistPvpScalar": {
+      "type": "float",
+      "description": "Scales the effectiveness of IgnoreMagicResist (ie. hollow weapons) in pvp battles. 1.0 = full effectiveness / ignore all resistances from life enchantments (default), 0.5 = half effectiveness / use half resistances from life enchantments, 0.0 = no effectiveness / use full resistances from life enchantments",
+      "default_from_server_property": "ignore_magic_resist_pvp_scalar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "IgnoreMagicArmorPvpScalar": {
+      "type": "float",
+      "description": "Scales the effectiveness of IgnoreMagicArmor (ie. hollow weapons) in pvp battles. 1.0 = full effectiveness / ignore all enchantments on armor (default), 0.5 = half effectiveness / use half enchantments from armor, 0.0 = no effectiveness / use full enchantments from armor",
+      "default_from_server_property": "ignore_magic_armor_pvp_scalar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "CloakMaxDmgMitigation": {
+      "type": "float",
+      "description": "The maximum amount of damage a cloak proc can mitigate",
+      "default_from_server_property": "pvp_cloak_max_dmg_mitigation",
+      "default": 100,
+      "min_value": 0,
+      "max_value": 10000
+    },
+    "DmgModWar": {
+      "type": "float",
+      "description": "Scales the amount of damage for war magic",
+      "default_from_server_property": "pvp_dmg_mod_war",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModWarVariance": {
+      "type": "float",
+      "description": "Scales the low end for war magic bolts and arcs without effecting top end.  Values under 1 will reduce the variance and increase min dmg by the amount the variance was reduced.  Values over 1 will increase variance and reduce min dmg to match.",
+      "default_from_server_property": "pvp_dmg_mod_war_variance",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModWarStreak": {
+      "type": "float",
+      "description": "Scales the amount of damage for war streaks",
+      "default_from_server_property": "pvp_dmg_mod_war_streak",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModWarBlast": {
+      "type": "float",
+      "description": "Scales the amount of damage for war blasts",
+      "default_from_server_property": "pvp_dmg_mod_war_blast",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModWarCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of CB crit damage for war magic.",
+      "default_from_server_property": "pvp_dmg_mod_war_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModWarCsCrit": {
+      "type": "float",
+      "description": "Scales the amount of CS crit damage for war magic.",
+      "default_from_server_property": "pvp_dmg_mod_war_cs_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModWarCsDmg": {
+      "type": "float",
+      "description": "Scales the amount of CS damage for war magic for all hits (both crits and non-crits).",
+      "default_from_server_property": "pvp_dmg_mod_war_cs_dmg",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoid": {
+      "type": "float",
+      "description": "Scales the amount of damage players take from Void Magic (not including streaks and DOTs which have their own mods)",
+      "default_from_server_property": "pvp_dmg_mod_void",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoidStreak": {
+      "type": "float",
+      "description": "Scales the amount of damage for void streaks.",
+      "default_from_server_property": "pvp_dmg_mod_void_streak",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoidDot": {
+      "type": "float",
+      "description": "Scales the amount of damage for void DOTs.",
+      "default_from_server_property": "pvp_dmg_mod_void_dot",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoidCrit": {
+      "type": "float",
+      "description": "Scales the amount of crit damage for void magic.",
+      "default_from_server_property": "pvp_dmg_mod_void_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoidCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of CB crit damage for void magic.",
+      "default_from_server_property": "pvp_dmg_mod_void_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoidVariance": {
+      "type": "float",
+      "description": "Scales the low end for void magic bolts and arcs without effecting top end.  Values under 1 will reduce the variance and increase min dmg by the amount the variance was reduced.  Values over 1 will increase variance and reduce min dmg to match.",
+      "default_from_server_property": "pvp_dmg_mod_void_variance",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for phantom",
+      "default_from_server_property": "pvp_dmg_mod_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for hollow",
+      "default_from_server_property": "pvp_dmg_mod_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for crippling blow",
+      "default_from_server_property": "pvp_dmg_mod_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for armor rending",
+      "default_from_server_property": "pvp_dmg_mod_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for critical strike",
+      "default_from_server_property": "pvp_dmg_mod_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFw": {
+      "type": "float",
+      "description": "Scales the amount of damage for Finesse Weapons",
+      "default_from_server_property": "pvp_dmg_mod_fw",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFwCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for FW CB.",
+      "default_from_server_property": "pvp_dmg_mod_fw_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFwCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for FW CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_fw_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFwCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for FW CS.",
+      "default_from_server_property": "pvp_dmg_mod_fw_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFwAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for FW AR.",
+      "default_from_server_property": "pvp_dmg_mod_fw_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFwHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for FW Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_fw_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModFwPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for war FW Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_fw_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLw": {
+      "type": "float",
+      "description": "Scales the amount of damage for Light Weapons",
+      "default_from_server_property": "pvp_dmg_mod_lw",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW CB.",
+      "default_from_server_property": "pvp_dmg_mod_lw_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_lw_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW CS.",
+      "default_from_server_property": "pvp_dmg_mod_lw_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW AR.",
+      "default_from_server_property": "pvp_dmg_mod_lw_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_lw_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_lw_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwTriplestrike": {
+      "type": "float",
+      "description": "Scales the amount of damage for LW Triple Strike weapons.",
+      "default_from_server_property": "pvp_dmg_mod_lw_triplestrike",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModLwCbCritTriplestrike": {
+      "type": "float",
+      "description": "Scales the amount of Crit damage for LW Triple Strike weapons.",
+      "default_from_server_property": "pvp_dmg_mod_lw_cb_crit_triplestrike",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHw": {
+      "type": "float",
+      "description": "Scales the amount of damage for Heavy Weapons",
+      "default_from_server_property": "pvp_dmg_mod_hw",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW CB.",
+      "default_from_server_property": "pvp_dmg_mod_hw_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_hw_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW CS.",
+      "default_from_server_property": "pvp_dmg_mod_hw_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW AR.",
+      "default_from_server_property": "pvp_dmg_mod_hw_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_hw_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_hw_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwMultistrike": {
+      "type": "float",
+      "description": "Scales the amount of damage for HW Multi Strike weapons.",
+      "default_from_server_property": "pvp_dmg_mod_hw_multistrike",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModHwCbCritMultistrike": {
+      "type": "float",
+      "description": "Scales the amount of Crit damage for HW Multi Strike weapons.",
+      "default_from_server_property": "pvp_dmg_mod_hw_cb_crit_multistrike",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2h": {
+      "type": "float",
+      "description": "Scales the amount of damage for Two Handed Weapons",
+      "default_from_server_property": "pvp_dmg_mod_2h",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2hCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for v CB.",
+      "default_from_server_property": "pvp_dmg_mod_2h_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2hCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for 2H CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_2h_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2hCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for 2H CS.",
+      "default_from_server_property": "pvp_dmg_mod_2h_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2hAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for 2H AR.",
+      "default_from_server_property": "pvp_dmg_mod_2h_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2hHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for 2H Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_2h_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgMod2hPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for 2H Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_2h_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbow": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow",
+      "default_from_server_property": "pvp_dmg_mod_xbow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbowCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow CB.",
+      "default_from_server_property": "pvp_dmg_mod_xbow_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbowCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_xbow_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbowCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow CS.",
+      "default_from_server_property": "pvp_dmg_mod_xbow_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbowAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow AR.",
+      "default_from_server_property": "pvp_dmg_mod_xbow_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbowHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_xbow_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModXbowPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for Xbow Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_xbow_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBow": {
+      "type": "float",
+      "description": "Scales the amount of damage for hollow",
+      "default_from_server_property": "pvp_dmg_mod_bow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBowCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for Bow CB.",
+      "default_from_server_property": "pvp_dmg_mod_bow_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBowCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for Bow CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_bow_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBowCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for Bow CS.",
+      "default_from_server_property": "pvp_dmg_mod_bow_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBowAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for Bow AR.",
+      "default_from_server_property": "pvp_dmg_mod_bow_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBowHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for Bow Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_bow_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModBowPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for Bow Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_bow_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTw": {
+      "type": "float",
+      "description": "Scales the amount of damage for hollow",
+      "default_from_server_property": "pvp_dmg_mod_tw",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTwCb": {
+      "type": "float",
+      "description": "Scales the amount of damage for TW CB.",
+      "default_from_server_property": "pvp_dmg_mod_tw_cb",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTwCbCrit": {
+      "type": "float",
+      "description": "Scales the amount of damage for TW CB Crit.",
+      "default_from_server_property": "pvp_dmg_mod_tw_cb_crit",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTwCs": {
+      "type": "float",
+      "description": "Scales the amount of damage for TW CS.",
+      "default_from_server_property": "pvp_dmg_mod_tw_cs",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTwAr": {
+      "type": "float",
+      "description": "Scales the amount of damage for TW AR.",
+      "default_from_server_property": "pvp_dmg_mod_tw_ar",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTwHollow": {
+      "type": "float",
+      "description": "Scales the amount of damage for TW Hollow.",
+      "default_from_server_property": "pvp_dmg_mod_tw_hollow",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModTwPhantom": {
+      "type": "float",
+      "description": "Scales the amount of damage for TW Phantom.",
+      "default_from_server_property": "pvp_dmg_mod_tw_phantom",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "CsCritrateMod": {
+      "type": "float",
+      "description": "Scales the crit rate for CS",
+      "default_from_server_property": "pvp_cs_critrate_mod",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "VoidHybridMod": {
+      "type": "float",
+      "description": "Scales the amount of DOT damage when a player is a hybrid void.",
+      "default_from_server_property": "pvp_void_hybrid_mod",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "DmgModVoidDotRatingReduction": {
+      "type": "float",
+      "description": "Scales the amount of rating reduction received from a void DOT that's cast by a PK on another player.",
+      "default_from_server_property": "pvp_dmg_mod_void_dot_rating_reduction",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "RatingsModDmg": {
+      "type": "float",
+      "description": "Scales the bonus received from dmg and dmg reduction ratings during pvp",
+      "default_from_server_property": "pvp_ratings_mod_dmg",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    },
+    "RatingsModCritdmg": {
+      "type": "float",
+      "description": "Scales the bonus received from crit dmg and crit dmg reduction ratings during pvp",
+      "default_from_server_property": "pvp_ratings_mod_critdmg",
+      "default": 1,
+      "min_value": 0,
+      "max_value": 100
+    }
+  }
+}
