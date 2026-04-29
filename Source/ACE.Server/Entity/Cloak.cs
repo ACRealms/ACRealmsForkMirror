@@ -5,6 +5,7 @@ using ACE.Entity.Enum;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
+using ACRealms;
 
 namespace ACE.Server.Entity
 {
@@ -206,7 +207,7 @@ namespace ACE.Server.Entity
             // https://asheron.fandom.com/wiki/Master_of_Arms
             // Cloaks with the chance to reduce incoming damage by 200 have been reduced to 100 for PvP circumstances.
             if (source is Player)
-                damageReductionAmount /= 2;
+                damageReductionAmount = (int)Math.Round(Props.Pvp.Damage.CloakMaxDmgMitigation(source.RealmRuleset));
 
             return damageReductionAmount;
         }

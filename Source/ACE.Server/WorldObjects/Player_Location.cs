@@ -867,16 +867,19 @@ namespace ACE.Server.WorldObjects
                 EphemeralRealmLastEnteredDrop = null;
             }
 
-            var pk = false;
+            var isDuelInstance = false;
+            var isPkOnlyRealm = false;
             if (newLocation.IsEphemeralRealm)
             {
                 var lb = LandblockManager.GetLandblockUnsafe(newLocation.LandblockId, newLocation.Instance);
-                if (lb.RealmHelpers.IsDuel || lb.RealmHelpers.IsPkOnly)
-                    pk = true;
+                isDuelInstance = lb.RealmHelpers.IsDuel;
+                isPkOnlyRealm = lb.RealmHelpers.IsPkOnly;
             }
 
             if (Props.Pvp.World.IsPkOnly(newRealm.StandardRules))
-                pk = true;
+                isPkOnlyRealm = true;
+
+            var pk = isDuelInstance || (isPkOnlyRealm && MinimumTimeSincePk == null);
 
             PlayerKillerStatus = pk ? PlayerKillerStatus.PK : PlayerKillerStatus.NPK;
             EnqueueBroadcast(new GameMessagePublicUpdatePropertyInt(this, PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus));

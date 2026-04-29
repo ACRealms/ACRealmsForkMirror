@@ -4455,7 +4455,8 @@ namespace ACE.Server.Command.Handlers
 
                     if (parameters[0] == "pk_server" || parameters[0] == "pkl_server")
                     {
-                        PlayerManager.UpdatePKStatusForAllPlayers(parameters[0], boolVal);
+                        // ACRealms derives PK-only status from realm rulesets; do not apply server-wide PK status changes here.
+                        //PlayerManager.UpdatePKStatusForAllPlayers(parameters[0], boolVal);
                     }
                 }
                 else

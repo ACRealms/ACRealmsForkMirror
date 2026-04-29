@@ -8,5 +8,6 @@
     "IsNeutralZone": true,
     "CanInteractWithNeutralZone": true,
     "HideoutEnabled": false
-  }
+  },
+  "apply_rulesets": [ "pvp-damage" ]
 }

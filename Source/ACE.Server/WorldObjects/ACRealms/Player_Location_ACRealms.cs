@@ -36,5 +36,6 @@ namespace ACE.Server.WorldObjects
         }
 
         public bool IsInEphemeralRealm => CurrentLandblock.IsEphemeral;
+        public bool IsInPkServerRealm => CurrentLandblock.RealmHelpers.IsPkOnly;
     }
 }

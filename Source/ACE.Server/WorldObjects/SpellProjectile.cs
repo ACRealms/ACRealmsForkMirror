@@ -13,6 +13,7 @@ using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Realms;
 using ACE.Server.WorldObjects.Entity;
+using ACRealms;
 
 namespace ACE.Server.WorldObjects
 {
@@ -535,6 +536,23 @@ namespace ACE.Server.WorldObjects
                         skillBonus = Spell.MinDamage * percentageBonus;
                     }
                 }
+
+                var minDmg = Spell.MinDamage;
+                var spellType = GetProjectileSpellType(Spell.Id);
+                if (isPVP && Spell.School == MagicSchool.WarMagic && (spellType == ProjectileSpellType.Arc || spellType == ProjectileSpellType.Bolt))
+                {
+                    var warVarianceMod = Props.Pvp.Damage.DmgModWarVariance(source.RealmRuleset);
+                    var modifiedVariance = Convert.ToInt32(Math.Round(Spell.Variance * warVarianceMod));
+                    minDmg = Spell.MaxDamage - modifiedVariance;
+                }
+
+                if (isPVP && Spell.School == MagicSchool.VoidMagic && (spellType == ProjectileSpellType.Arc || spellType == ProjectileSpellType.Bolt))
+                {
+                    var voidVarianceMod = Props.Pvp.Damage.DmgModVoidVariance(source.RealmRuleset);
+                    var modifiedVariance = Convert.ToInt32(Math.Round(Spell.Variance * voidVarianceMod));
+                    minDmg = Spell.MaxDamage - modifiedVariance;
+                }
+
                 baseDamage = ThreadSafeRandom.Next(Spell.MinDamage, Spell.MaxDamage);
 
                 weaponResistanceMod = GetWeaponResistanceModifier(weapon, sourceCreature, attackSkill, Spell.DamageType);
@@ -567,6 +585,60 @@ namespace ACE.Server.WorldObjects
             {
                 ShowInfo(target, Spell, attackSkill, criticalChance, criticalHit, critDefended, overpower, weaponCritDamageMod, skillBonus, baseDamage, critDamageBonus, elementalDamageMod, slayerMod, weaponResistanceMod, resistanceMod, absorbMod, LifeProjectileDamage, lifeMagicDamage, finalDamage);
             }
+
+            //Apply pvp dmg mods for war and void (not including DOTs which are in EnchantmentManager.ApplyDamageTick)
+            float dmgMod = 1;
+            if (sourcePlayer != null && targetPlayer != null)
+            {
+                if (Spell.School == MagicSchool.WarMagic)
+                {
+                    dmgMod = (float)Props.Pvp.Damage.DmgModWar(source.RealmRuleset);
+
+                    if (SpellType == ProjectileSpellType.Streak)
+                        dmgMod = (float)Props.Pvp.Damage.DmgModWarStreak(source.RealmRuleset); // scales war streak damages
+
+                    if (SpellType == ProjectileSpellType.Blast)
+                        dmgMod = (float)Props.Pvp.Damage.DmgModWarBlast(source.RealmRuleset); // scales war blast damages
+
+                    if (criticalHit && weapon.HasImbuedEffect(ImbuedEffectType.CripplingBlow))
+                    {
+                        dmgMod *= (float)Props.Pvp.Damage.DmgModWarCbCrit(source.RealmRuleset);
+                    }
+
+                    if (weapon.HasImbuedEffect(ImbuedEffectType.CriticalStrike))
+                    {
+                        dmgMod *= (float)Props.Pvp.Damage.DmgModWarCsDmg(source.RealmRuleset);
+
+                        if (criticalHit)
+                        {
+                            dmgMod *= (float)Props.Pvp.Damage.DmgModWarCsCrit(source.RealmRuleset);
+                        }
+                    }
+
+                    finalDamage = finalDamage * dmgMod;
+                }
+                else if (Spell.DamageType == DamageType.Nether)
+                {
+                    dmgMod = (float)Props.Pvp.Damage.DmgModVoid(source.RealmRuleset);
+
+                    if (SpellType == ProjectileSpellType.Streak)
+                    {
+                        dmgMod = (float)Props.Pvp.Damage.DmgModVoidStreak(source.RealmRuleset); // scales void streak damages
+                    }
+
+                    if (criticalHit)
+                    {
+                        dmgMod *= (float)Props.Pvp.Damage.DmgModVoidCrit(source.RealmRuleset);
+                        if (weapon.HasImbuedEffect(ImbuedEffectType.CripplingBlow))
+                        {
+                            dmgMod *= (float)Props.Pvp.Damage.DmgModVoidCbCrit(source.RealmRuleset);
+                        }
+                    }
+
+                    finalDamage = finalDamage * dmgMod;
+                }
+            }
+
             return finalDamage;
         }
 
@@ -737,14 +809,39 @@ namespace ACE.Server.WorldObjects
                 }
 
                 var damageRating = sourceCreature?.GetDamageRating() ?? 0;
+
+                //Apply custom PvP Dmg rating scaling
+                var pvpDmgRatingModifierConfig = Props.Pvp.Damage.RatingsModDmg((sourceCreature ?? ProjectileSource ?? this).RealmRuleset);
+                if (pkBattle)
+                {
+                    damageRating = (int)Math.Round(damageRating * pvpDmgRatingModifierConfig);
+                }
+
                 damageRatingMod = Creature.AdditiveCombine(Creature.GetPositiveRatingMod(damageRating), heritageMod, sneakAttackMod);
 
                 damageResistRatingMod = target.GetDamageResistRatingMod(CombatType.Magic);
+
+                //Apply custom PvP DRR rating scaling
+                if (pkBattle)
+                {
+                    int drrRatingBase = Math.Abs(Creature.ModToRating(damageResistRatingMod));
+                    damageResistRatingMod = Creature.GetNegativeRatingMod((int)Math.Round(drrRatingBase * pvpDmgRatingModifierConfig));
+                }
 
                 if (critical)
                 {
                     critDamageRatingMod = Creature.GetPositiveRatingMod(sourceCreature?.GetCritDamageRating() ?? 0);
                     critDamageResistRatingMod = Creature.GetNegativeRatingMod(target.GetCritDamageResistRating());
+
+                    if (pkBattle)
+                    {
+                        var pvpCritRatingModifierConfig = Props.Pvp.Damage.RatingsModCritdmg((sourceCreature ?? ProjectileSource ?? this).RealmRuleset);
+                        int cdRatingBase = Math.Abs(Creature.ModToRating(critDamageRatingMod));
+                        critDamageRatingMod = Creature.GetPositiveRatingMod((int)Math.Round(cdRatingBase * pvpCritRatingModifierConfig));
+
+                        int cdrRatingBase = Math.Abs(Creature.ModToRating(critDamageResistRatingMod));
+                        critDamageResistRatingMod = Creature.GetNegativeRatingMod((int)Math.Round(cdrRatingBase * pvpCritRatingModifierConfig));
+                    }
 
                     damageRatingMod = Creature.AdditiveCombine(damageRatingMod, critDamageRatingMod);
                     damageResistRatingMod = Creature.AdditiveCombine(damageResistRatingMod, critDamageResistRatingMod);

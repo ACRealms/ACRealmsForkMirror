@@ -2,14 +2,17 @@
   "$schema_version": 1,
   "namespace": "Pvp.World",
   "description": "Properties related to world settings for PvP",
-  "groups": [
-    {
+  "properties": {
+    "IsPkOnly": {
       "type": "boolean",
-      "default": false,
-      "properties": {
-        "IsPkOnly": "Standard 'Red server' rules. Players are always Player Killer status unless recently killed by a player killer",
-        "IsDuelingRealm": "Set this to true to designate this realm as the dueling realm. Allows /rebuff command, all summoned portals lead to ephemeral instances, and no vitae."
-      }
+      "description": "Standard 'Red server' rules. Players are always Player Killer status unless recently killed by a player killer",
+      "default_from_server_property": "pk_server",
+      "default": false
+    },
+    "IsDuelingRealm": {
+      "type": "boolean",
+      "description": "Set this to true to designate this realm as the dueling realm. Allows /rebuff command, all summoned portals lead to ephemeral instances, and no vitae.",
+      "default": false
     }
-  ]
+  }
 }

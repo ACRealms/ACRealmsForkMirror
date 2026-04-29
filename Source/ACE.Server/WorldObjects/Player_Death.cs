@@ -987,7 +987,7 @@ namespace ACE.Server.WorldObjects
             if (MinimumTimeSincePk == null || (PropertyManager.GetBool("pk_server_safe_training_academy").Item && RecallsDisabled))
                 return;
 
-            if (PkLevel == PKLevel.NPK && !Props.Pvp.World.IsPkOnly(RealmRuleset) && !PropertyManager.GetBool("pkl_server").Item)
+            if (PkLevel == PKLevel.NPK && !IsInPkServerRealm && !PropertyManager.GetBool("pkl_server").Item)
             {
                 MinimumTimeSincePk = null;
                 return;
